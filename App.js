@@ -2,9 +2,13 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import MainSwitch from './src/components/MainSwitch';
 import SaunaInfo from './src/components/SaunaInfo';
+import { initws } from './src/network/ComApi';
 
 
 export default class App extends React.Component {
+    componentWillMount() {
+        initws();
+    }
   render() {
     return (
       <View style={styles.containerWhole}>
