@@ -1,49 +1,28 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import MainSwitch from './src/components/MainSwitch';
-import SaunaInfo from './src/components/SaunaInfo';
+import { StackNavigator } from 'react-navigation';
+import MainScreen from './src/screens/MainScreen';
+import SetTemperature from './src/screens/SetTemperature';
 import { initws } from './src/network/ComApi';
 
+initws();
+
+const RootStack = StackNavigator(
+    {
+        MainScreen: {
+            screen: MainScreen,
+        },
+        SetTemperature: {
+            screen: SetTemperature,
+        },
+    },
+    {
+        initialRouteName: 'MainScreen',
+        headerMode: 'screen'
+    }
+);
 
 export default class App extends React.Component {
-    componentWillMount() {
-        initws();
+    render() {
+        return <RootStack />;
     }
-  render() {
-    return (
-      <View style={styles.containerWhole}>
-          <View style={styles.containerMainSwitch}>
-        <Text style={styles.mainSwitch}>HLAVNY VYPINAC</Text>
-              <MainSwitch/>
-          </View>
-          <View style={styles.containerInfo}>
-              <SaunaInfo/>
-          </View>
-      </View>
-    );
-  }
 }
-
-const styles = StyleSheet.create({
-    mainSwitch: {
-        fontSize: 20,
-        fontWeight: '800',
-        lineHeight: 50,
-    },
-    containerWhole: {
-        flex: 1,
-        justifyContent: 'center',
-        backgroundColor: 'rgba(52, 52, 52, 0.2)'
-    },
-  containerMainSwitch: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-      paddingTop: 20,
-  },
-    containerInfo: {
-        flex: 3,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});

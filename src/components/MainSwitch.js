@@ -2,12 +2,13 @@ import React from 'react';
 import {StyleSheet, Component, View, Text, TouchableOpacity} from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo';
+import {getws} from "../network/ComApi";
 
 
 function RenderButton(props) {
     if (props.buttonOn) {
         return (
-            <View style={styles.container}>
+            <View style={styles.containerButton}>
             <TouchableOpacity onPress={props.onPress}>
                 <FontAwesome name="power-off" style={styles.SwitchStyleON}></FontAwesome>
             </TouchableOpacity>
@@ -16,7 +17,7 @@ function RenderButton(props) {
         )
     } else {
         return (
-            <View style={styles.container}>
+            <View style={styles.containerButton}>
                 <TouchableOpacity onPress={props.onPress}>
                     <FontAwesome name="power-off" style={styles.SwitchStyleOFF}></FontAwesome>
                 </TouchableOpacity>
@@ -30,36 +31,72 @@ class MainSwitch extends React.Component {
 
     constructor() {
         super();
-        this.state = {buttonOn: true};
+        this.networkClient  = getws();
+        this.state = {
+            actualSaunaState: this.networkClient.getActualSaunaState()
+        };
     }
     onButtonPress = () => {
+        this.networkClient.switchSauna();
+    }
+
+    componentWillMount() {
+        this.listenerID = this.networkClient.addNotifyCallback(data => {
+            this.onMessage(data);
+        });
         this.setState(previousState => {
-            if (previousState.buttonOn) {
-                return { buttonOn: false}
-            }
-            return {buttonOn: true};
+            return  { actualSaunaState: this.networkClient.getActualSaunaState()}
+        });
+    }
+
+    componentWillUnmount() {
+        this.networkClient.removeNotifyCallback(this.listenerID);
+    }
+
+    onMessage(message) {
+        this.setState(previousState => {
+            return  { actualSaunaState: this.networkClient.getActualSaunaState()}
         });
     }
 
 
 
     render() {
-        return (
+        return (<View style={styles.MainSwitch}>
             <View style={styles.container}>
+            <Text style={styles.mainSwitch}>HLAVNY VYPINAC</Text>
                 <LinearGradient
                     colors={['#4c669f', '#3b5998', '#192f6a']}
-                    style={{ padding: 15, alignItems: 'center', borderRadius: 50 }}>
-                    <RenderButton buttonOn={this.state.buttonOn} onPress={this.onButtonPress}/>
+                    style={styles.gradientStyle}>
+                    <RenderButton buttonOn={this.state.actualSaunaState.status} onPress={this.onButtonPress}/>
                 </LinearGradient>
 
+            </View>
             </View>
         );
     }
 }
 
 const styles = StyleSheet.create({
+    MainSwitch: {
+      flex: 2
+    },
     container: {
+        paddingTop: 30,
       alignItems: 'center',
+    },
+    gradientStyle: {
+        padding: 15,
+        borderRadius: 50,
+    },
+    containerButton: {
+        marginTop: 20,
+        alignItems: 'center'
+    },
+    mainSwitch: {
+        fontSize: 20,
+        fontWeight: '800',
+        lineHeight: 50,
     },
     SwitchStyleON: {
         color: '#99ff33',
