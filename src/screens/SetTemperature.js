@@ -1,62 +1,39 @@
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import { Slider } from 'react-native';
 import {getws} from "../network/ComApi";
+import { AppContext } from '../context/context';
 
-class SetTemperature extends React.Component {
-    static navigationOptions = {
-        title: 'Nastavit Teplotu',
-    };
+function SetTemperature() {
+    const { state } = useContext(AppContext);
 
-    constructor() {
-        super();
-        this.networkClient  = getws();
-        this.state =  {
-            temperature: this.networkClient.getSetTemperature(),
-        };
+    const [temperature, setTemperature] = useState(state.setTemperature);
+
+    function onValueChange(value) {
+        setTemperature(value);
     }
 
-    componentWillMount() {
-        this.listenerID = this.networkClient.addNotifyCallback(data => {
-            this.onMessage(data);
-        });
-        this.setState(previousState => {
-            return  { temperature: this.networkClient.getSetTemperature()}
-        });
+    function onSlidingComplete() {
+        getws().setTemperature(temperature);
     }
 
-    componentWillUnmount() {
-        this.networkClient.removeNotifyCallback(this.listenerID);
-    }
-
-    onMessage(message) {
-        this.setState(previousState => {
-            return  { temperature: this.networkClient.getSetTemperature()}
-        });
-    }
-
-    onValueChange(value) {
-        this.setState({temperature : value});
-    }
-
-    onSlidingComplete() {
-        this.networkClient.setTemperature(this.state.temperature);
-    }
-
-    render() {
-        return (<View style={styles.SetTemperature}>
-                <Slider
-                    minimumValue={0}
-                    maximumValue={100}
-                    step={0.5}
-                    value={this.state.temperature}
-                    onValueChange={(value) => this.onValueChange(value)}
-                    onSlidingComplete={(value) => this.onSlidingComplete()}/>
-                <Text style={styles.textValue}>{this.state.temperature} °C</Text>
-            </View>
-        )
-    }
+    return (
+        <View style={styles.SetTemperature}>
+            <Slider
+                minimumValue={0}
+                maximumValue={100}
+                step={0.5}
+                value={state.setTemperature}
+                onValueChange={(value) => onValueChange(value)}
+                onSlidingComplete={() => onSlidingComplete()}/>
+            <Text style={styles.textValue}>{temperature} °C</Text>
+        </View>
+    )
 }
+
+SetTemperature['navigationOptions'] = screenProps => ({
+    title: 'Nastavit Teplotu',
+})
 
 const styles = StyleSheet.create({
     SetTemperature: {

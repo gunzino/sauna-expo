@@ -1,18 +1,19 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {StyleSheet, Component, View, Text, TouchableOpacity} from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
-import { LinearGradient } from 'expo';
+import { LinearGradient } from 'expo-linear-gradient';
 import {getws} from "../network/ComApi";
+import { AppContext } from '../context/context';
 
 
 function RenderButton(props) {
     if (props.buttonOn) {
         return (
             <View style={styles.containerButton}>
-            <TouchableOpacity onPress={props.onPress}>
-                <FontAwesome name="power-off" style={styles.SwitchStyleON}></FontAwesome>
-            </TouchableOpacity>
-            <Text style={styles.ButtonTextStyle}>ZAP</Text>
+                <TouchableOpacity onPress={props.onPress}>
+                    <FontAwesome name="power-off" style={styles.SwitchStyleON}></FontAwesome>
+                </TouchableOpacity>
+                <Text style={styles.ButtonTextStyle}>ZAP</Text>
             </View>
         )
     } else {
@@ -27,54 +28,27 @@ function RenderButton(props) {
     }
 }
 
-class MainSwitch extends React.Component {
 
-    constructor() {
-        super();
-        this.networkClient  = getws();
-        this.state = {
-            actualSaunaState: this.networkClient.getActualSaunaState()
-        };
-    }
-    onButtonPress = () => {
-        this.networkClient.switchSauna();
+function MainSwitch() {
+    const { state } = useContext(AppContext);
+
+    function onButtonPress() {
+        getws().switchSauna();
     }
 
-    componentWillMount() {
-        this.listenerID = this.networkClient.addNotifyCallback(data => {
-            this.onMessage(data);
-        });
-        this.setState(previousState => {
-            return  { actualSaunaState: this.networkClient.getActualSaunaState()}
-        });
-    }
-
-    componentWillUnmount() {
-        this.networkClient.removeNotifyCallback(this.listenerID);
-    }
-
-    onMessage(message) {
-        this.setState(previousState => {
-            return  { actualSaunaState: this.networkClient.getActualSaunaState()}
-        });
-    }
-
-
-
-    render() {
-        return (<View style={styles.MainSwitch}>
+    return (
+        <View style={styles.MainSwitch}>
             <View style={styles.container}>
-            <Text style={styles.mainSwitch}>HLAVNY VYPINAC</Text>
+                <Text style={styles.mainSwitch}>HLAVNY VYPINAC</Text>
                 <LinearGradient
                     colors={['#4c669f', '#3b5998', '#192f6a']}
                     style={styles.gradientStyle}>
-                    <RenderButton buttonOn={this.state.actualSaunaState.status} onPress={this.onButtonPress}/>
+                    <RenderButton buttonOn={state.status} onPress={onButtonPress}/>
                 </LinearGradient>
 
             </View>
-            </View>
-        );
-    }
+        </View>
+    )
 }
 
 const styles = StyleSheet.create({

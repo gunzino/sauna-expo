@@ -3,21 +3,23 @@ import {StyleSheet, View} from 'react-native';
 import MainSwitch from '../components/MainSwitch';
 import SaunaInfo from '../components/SaunaInfo';
 
-export default class MainScreen extends React.Component{
-    static navigationOptions = {
-        title: 'Control Sauna',
-        header: null,
-        headerBackTitle: 'Control Sauna'
-    };
-    render() {
-        return (
-            <View style={styles.containerWhole}>
-                    <MainSwitch/>
-                    <SaunaInfo navigation={this.props.navigation}/>
-            </View>
-        );
-    }
+function MainScreen(props) {
+
+    return (
+        <View style={styles.containerWhole}>
+            <MainSwitch/>
+            <SaunaInfo navigation={props.navigation}/>
+        </View>
+    )
 }
+
+MainScreen['navigationOptions'] = () => ({
+    title: 'Control Sauna',
+    header: null,
+    headerBackTitle: 'Control Sauna'
+})
+export default MainScreen;
+
 const styles = StyleSheet.create({
     containerWhole: {
         flex: 1,

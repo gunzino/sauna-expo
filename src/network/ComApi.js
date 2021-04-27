@@ -1,21 +1,28 @@
 import ReconnectingWebsocket from 'reconnecting-websocket';
 import config from '../../config';
+import { setState } from '../context/context';
+
+const initialState = {
+    loaded: false, status: 0, temperature: 37, setTemperature: 0, humidity: 80
+};
 
 let client
 class NetworkClient {
     constructor(ip) {
         this.client = new ReconnectingWebsocket(ip);
         this.ip = ip;
-        this.messageListeners = [];
-        this.listenerID = 0;
-        this.actualSaunaState = {
-            loaded: false, status: 0, temperature: 37, setTemperature: 0, humidity: 80
-        }
+        this.actualSaunaState = initialState;
         this.client.onopen = () => this.connectionOpened();
+        this.client.onclose = () => this.connectionClosed();
         this.client.onmessage = (message) => this.onMessage(message);
     }
 
+    connectionClosed() {
+        this.connected = false;
+    }
+
     connectionOpened() {
+        this.connected = true;
         this.client.send(JSON.stringify({
             type: "getActualSaunaState"
         }));
@@ -32,34 +39,15 @@ class NetworkClient {
             if (data.type == "actualSaunaState") {
                 this.actualSaunaState = data.data;
                 this.actualSaunaState.loaded = true;
-            }
-            if (this.messageListeners.length > 0) {
-                this.messageListeners.forEach(function(listener) {
-                    listener.callback(data);
-                });
+                setState(this.actualSaunaState);
             }
         }
     }
 
-    addNotifyCallback(callback) {
-        let listenerID = this.listenerID++;
-        this.messageListeners.push(
-            {
-                id: listenerID,
-                callback: callback
-            }
-        );
-        return listenerID;
-    }
-
-    removeNotifyCallback(listenerID) {
-        this.messageListeners = this.messageListeners.filter(function(el) {
-            return el.id !== listenerID;
-        });
-    }
-
     sendMessage(data) {
-        this.client.send(data);
+        if (this.connected) {
+            this.client.send(data);
+        }
     }
 
     getActualSaunaState() {
@@ -76,7 +64,7 @@ class NetworkClient {
     }
 
     setTemperature(value) {
-        this.client.send(JSON.stringify({
+        this.sendMessage(JSON.stringify({
                 type: "setTemperature",
                 data: {
                     temperature: value
@@ -90,13 +78,12 @@ class NetworkClient {
         if (this.actualSaunaState.status == 1) {
             changeStatus = 0;
         }
-        this.client.send(JSON.stringify({
+        this.sendMessage(JSON.stringify({
             type: "setSaunaStatus",
             data: {
                 status: changeStatus
             }
-            })
-        );
+        }));
     }
 
 }
@@ -109,3 +96,5 @@ export const initws = () => {
 export const getws = () => {
         return client;
 }
+
+export { initialState as initialSaunaState };
